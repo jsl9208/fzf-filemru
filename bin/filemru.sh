@@ -8,6 +8,11 @@ MRU_FILE=$CACHE/fzf_filemru
 DEFAULT_COMMAND="find . -path '*/\\.*' -prune -o -type f -print -o -type l -print 2> /dev/null | sed s/^..//"
 REAL_PWD="$(pwd -P)"
 
+awk="awk"
+if [ "$(uname)" == "Darwin" ]; then
+  awk="gawk"
+fi
+
 if [ ! -d "$CACHE" ]; then
   mkdir -p "$CACHE"
 fi
@@ -38,7 +43,7 @@ update_mru() {
   # file before awk can get to it.  I suspect witchcraft.
   CURRENT=$(cat $MRU_FILE)
 
-  echo "$CURRENT" | awk -F',' '
+  echo "$CURRENT" | $awk -F',' '
     BEGIN {
       ts = systime()
       ts -= (ts % 120)
@@ -122,7 +127,7 @@ trap cleanup EXIT
 
 git_root=$(git rev-parse --show-toplevel 2> /dev/null)
 if [[ $ignore_git_submodules -eq 1 && -n "$git_root" && -e "$git_root/.gitmodules" ]]; then
-  for p in $(git submodule foreach -q 'git ls-tree --name-only --full-name -r HEAD | awk "\$0=\"$path/\"\$0"' 2>/dev/null); do
+  for p in $(git submodule foreach -q 'git ls-tree --name-only --full-name -r HEAD | $awk "\$0=\"$path/\"\$0"' 2>/dev/null); do
     p="$git_root/$p"
     echo "${p##$REAL_PWD/}" >> $GREP_EXCLUDE
   done
@@ -167,7 +172,7 @@ FIND_CMD=${FZF_DEFAULT_COMMAND:-$DEFAULT_COMMAND}
 if [ -s "$GREP_EXCLUDE" ]; then
   FIND_CMD+=" | $GREP_EXCLUDE_CMD"
 fi
-FIND_CMD+=" | awk '\$0=\"${prefix_std} \"\$0'"
+FIND_CMD+=" | $awk '\$0=\"${prefix_std} \"\$0'"
 
 
 # Just find files and exit
@@ -180,7 +185,7 @@ fi
 
 # Act as FZF and update FILE_MRU after selection is made
 FIND_CMD="cat ""\$_FZF_MRU"" && $FIND_CMD"
-SELECTIONS=($(exec env _FZF_MRU="$MRU" FZF_DEFAULT_COMMAND="$FIND_CMD" fzf --ansi --nth=2 | awk '{ print $2 }'))
+SELECTIONS=($(exec env _FZF_MRU="$MRU" FZF_DEFAULT_COMMAND="$FIND_CMD" fzf --ansi --nth=2 | $awk '{ print $2 }'))
 
 if [ ${#SELECTIONS[@]} -eq 0 ]; then
   exit $?
