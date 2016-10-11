@@ -127,7 +127,7 @@ trap cleanup EXIT
 
 git_root=$(git rev-parse --show-toplevel 2> /dev/null)
 if [[ $ignore_git_submodules -eq 1 && -n "$git_root" && -e "$git_root/.gitmodules" ]]; then
-  for p in $(git submodule foreach -q 'git ls-files --full-name -r HEAD | $awk "\$0=\"$path/\"\$0"' 2>/dev/null); do
+  for p in $(git submodule foreach -q 'git ls-tree --name-only --full-name -r HEAD | $awk "\$0=\"$path/\"\$0"' 2>/dev/null); do
     p="$git_root/$p"
     echo "${p##$REAL_PWD/}" >> $GREP_EXCLUDE
   done
@@ -153,7 +153,7 @@ fi
 
 
 if [[ -n "$git_root" && $git_ls -eq 1 ]]; then
-  for p in $(git ls-files -r HEAD 2> /dev/null | $GREP_EXCLUDE_CMD); do
+  for p in $(git ls-tree --name-only -r HEAD 2> /dev/null | $GREP_EXCLUDE_CMD); do
     p="$git_root/$p"
     [[ ! -e "$p" ]] && continue
     cut_fn="${p##$REAL_PWD/}"
