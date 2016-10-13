@@ -135,7 +135,7 @@ fi
 
 
 if [ -f "$MRU_FILE" ]; then
-  files=$(cat "$MRU_FILE" | cut -d, -f3 | grep "^$PWD/")
+  files=$(cat "$MRU_FILE" | cut -d, -f3)
   for fn in $files; do
     if [ -e "$fn" ]; then
       cut_fn="${fn##$PWD/}"
